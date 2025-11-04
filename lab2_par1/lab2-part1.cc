@@ -1,7 +1,3 @@
-/*
- * Baseado em examples/tcp/tcp-variants-comparison.cc 
- * Modificado para ECE 6110 Lab 2, Part 1 [cite: 1, 22]
- */
 
 #include <iostream>
 #include <fstream>
@@ -24,18 +20,10 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("lab2-part1"); // Nome do programa 
+NS_LOG_COMPONENT_DEFINE ("lab2-part1"); 
 
-// As funções de tracing (CwndTracer, SsThreshTracer, etc.) do
-// tcp-variants-comparison.cc original são mantidas aqui.
-// ... (Omitido por brevidade, assumindo que o código de tracing de 
-//      tcp-variants-comparison.cc está presente) ...
 
-// Funções de Tracing (CwndTracer, SsThreshTracer, RttTracer, RtoTracer, etc.)
-// ... (Colar as funções GetNodeIdFromContext e as funções *Tracer de
-//      tcp-variants-comparison.cc aqui) ...
 
-// Mapas estáticos para tracing
 static std::map<uint32_t, bool> firstCwnd;
 static std::map<uint32_t, bool> firstSshThr;
 static std::map<uint32_t, bool> firstRtt;
@@ -81,7 +69,7 @@ static void
 SsThreshTracer (std::string context, uint32_t oldval, uint32_t newval)
 {
   uint32_t nodeId = GetNodeIdFromContext (context);
-  if (ssThreshStream.find(nodeId) == ssThreshStream.end()) return; // Proteção
+  if (ssThreshStream.find(nodeId) == ssThreshStream.end()) return; 
 
   if (firstSshThr[nodeId])
     {
@@ -97,7 +85,7 @@ SsThreshTracer (std::string context, uint32_t oldval, uint32_t newval)
     }
 }
 
-// ... (Outras funções de tracing RttTracer, RtoTracer, etc. podem ser adicionadas se necessário) ...
+
 
 static void
 TraceCwnd (std::string cwnd_tr_file_name, uint32_t nodeId, uint32_t socketId)
@@ -125,18 +113,18 @@ int main (int argc, char *argv[])
   std::string delay = "20ms";
   double errorRate = 0.00001;
   uint16_t nFlows = 1;
-  std::string transport_prot = "TcpCubic"; // Default para Part 1
+  std::string transport_prot = "TcpCubic"; 
 
-  // Parâmetros do tcp-variants-comparison.cc original (mantidos para consistência)
-  uint64_t data_mbytes = 0; //
-  uint32_t mtu_bytes = 1500; // Valor padrão, pode ser ajustado se necessário
-  double duration = 20.0; // 
+
+  uint64_t data_mbytes = 0; 
+  uint32_t mtu_bytes = 1500; 
+  double duration = 20.0; 
   uint32_t run = 0;
-  bool flow_monitor = true; // Habilitado para calcular goodput
+  bool flow_monitor = true; 
   std::string prefix_file_name = "lab2-part1";
 
   CommandLine cmd (__FILE__);
-  // Nomes exatos dos parâmetros conforme solicitado
+
   cmd.AddValue ("dataRate", "Bottleneck link data rate", dataRate);
   cmd.AddValue ("delay", "Bottleneck link delay", delay);
   cmd.AddValue ("errorRate", "Bottleneck link error rate", errorRate);
@@ -145,7 +133,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("run", "Run index (for setting repeatable seeds)", run);
   cmd.Parse (argc, argv);
 
-  // Garantir que o protocolo seja "ns3::TcpCubic" ou "ns3::TcpNewReno"
+
   if (transport_prot.compare ("TcpCubic") == 0)
     {
       transport_prot = "ns3::TcpCubic";
@@ -162,25 +150,25 @@ int main (int argc, char *argv[])
   SeedManager::SetSeed (1);
   SeedManager::SetRun (run);
 
-  // --- Modificações do Lab2 ---
+
   // Remoção das linhas Config::SetDefault 
-  // Config::SetDefault ("ns3::TcpSocket::RcvBufSize", UintegerValue (1 << 21)); // REMOVIDO 
-  // Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (1 << 21)); // REMOVIDO 
-  // Config::SetDefault ("ns3::TcpSocketBase::Sack", BooleanValue (sack)); // REMOVIDO
-  // Config::SetDefault ("ns3::TcpL4Protocol::RecoveryType", ...); // REMOVIDO 
-  // --- Fim das Modificações ---
+  // Config::SetDefault ("ns3::TcpSocket::RcvBufSize", UintegerValue (1 << 21));
+  // Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (1 << 21));
+  // Config::SetDefault ("ns3::TcpSocketBase::Sack", BooleanValue (sack));
+  // Config::SetDefault ("ns3::TcpL4Protocol::RecoveryType", ...); 
+
 
   // Modelo de erro de fifth.cc 
   Ptr<RateErrorModel> em = CreateObject<RateErrorModel>();
   em->SetAttribute ("ErrorRate", DoubleValue (errorRate)); //
-  // O modelo em tcp-variants.cc foi removido 
+  
 
-  // Selecionar a variante TCP
+
   TypeId tcpTid;
   NS_ABORT_MSG_UNLESS (TypeId::LookupByNameFailSafe (transport_prot, &tcpTid), "TypeId " << transport_prot << " not found");
   Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TypeId::LookupByName (transport_prot)));
   
-  // Calcular tamanho do ADU (do original)
+
   Header* temp_header = new Ipv4Header ();
   uint32_t ip_header = temp_header->GetSerializedSize ();
   delete temp_header;
@@ -189,13 +177,11 @@ int main (int argc, char *argv[])
   delete temp_header;
   uint32_t tcp_adu_size = mtu_bytes - (ip_header + tcp_header);
 
-  // Configurar tempos de simulação
+  
   double start_time = 1.0;
   double sink_start_time = 0.0;
-  double stop_time = start_time + duration; // Duração é 20s, então stop_time = 21.0
+  double stop_time = start_time + duration; 
 
-  // --- Criar Topologia Part 1 ---
-  // 4 nós: source, r1, r2, dest
   NodeContainer nodes;
   nodes.Create (4);
   NodeContainer source_n (nodes.Get (0));
@@ -223,14 +209,14 @@ int main (int argc, char *argv[])
   NetDeviceContainer d_r1_r2 = p2pBottleneck.Install (r1_n.Get (0), r2_n.Get (0));
   NetDeviceContainer d_r2_d = p2pAccess.Install (r2_n.Get (0), dest_n.Get (0));
 
-  // Configurar Filas (usando PfifoFast como no original)
+
   TrafficControlHelper tchPfifo;
   tchPfifo.SetRootQueueDisc ("ns3::PfifoFastQueueDisc");
   tchPfifo.Install (d_s_r1);
   tchPfifo.Install (d_r1_r2);
   tchPfifo.Install (d_r2_d);
 
-  // Atribuir endereços IP
+
   Ipv4AddressHelper address;
   Ipv4InterfaceContainer i_s_r1, i_r1_r2, i_r2_d;
 
@@ -244,9 +230,7 @@ int main (int argc, char *argv[])
   i_r2_d = address.Assign (d_r2_d);
 
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-  // --- Fim da Topologia ---
-
-  // --- Configurar Aplicações ---
+--
   uint16_t port = 50000;
   Ipv4Address destIp = i_r2_d.GetAddress (1); // IP do nó 'dest'
 
@@ -257,24 +241,24 @@ int main (int argc, char *argv[])
   sinkApp.Start (Seconds (sink_start_time)); 
   sinkApp.Stop (Seconds (stop_time));
 
-  // Aplicações BulkSend (nFlows no nó 'source')
+ 
   ApplicationContainer sourceApps;
   for (uint16_t i = 0; i < nFlows; i++)
     {
-      AddressValue remoteAddress (InetSocketAddress (destIp, port + i)); // Porta diferente por fluxo
+      AddressValue remoteAddress (InetSocketAddress (destIp, port + i)); 
       Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (tcp_adu_size));
       BulkSendHelper ftp ("ns3::TcpSocketFactory", Address ());
       ftp.SetAttribute ("Remote", remoteAddress);
       ftp.SetAttribute ("SendSize", UintegerValue (tcp_adu_size));
-      ftp.SetAttribute ("MaxBytes", UintegerValue (data_mbytes * 1000000)); // 0 = ilimitado
+      ftp.SetAttribute ("MaxBytes", UintegerValue (data_mbytes * 1000000)); 
 
       ApplicationContainer sourceApp = ftp.Install (source_n.Get (0));
-      sourceApp.Start (Seconds (start_time)); // Todos os fluxos começam em 1
-      sourceApp.Stop (Seconds (stop_time - 1.0)); // Parar 1s antes do fim
+      sourceApp.Start (Seconds (start_time)); 
+      sourceApp.Stop (Seconds (stop_time - 1.0)); 
       sourceApps.Add (sourceApp);
       
-      // Configurar tracing para este fluxo (socket i no nó 0)
-      // O nó 'source' é o nó 0
+      
+      
       firstCwnd[0] = true;
       firstSshThr[0] = true;
       std::string flowString = "-flow" + std::to_string(i);
@@ -284,14 +268,14 @@ int main (int argc, char *argv[])
                            prefix_file_name + flowString + "-ssth.data", 0, i);
     }
 
-  // Flow monito
+  
   FlowMonitorHelper flowHelper;
   Ptr<FlowMonitor> monitor = flowHelper.InstallAll ();
 
   Simulator::Stop (Seconds (stop_time));
   Simulator::Run ();
 
-  // --- Processar Resultados (Goodput) ---
+  
   monitor->CheckForLostPackets ();
   Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> (flowHelper.GetClassifier ());
   FlowMonitor::FlowStatsContainer stats = monitor->GetFlowStats ();
@@ -306,14 +290,14 @@ int main (int argc, char *argv[])
   for (auto it = stats.begin (); it != stats.end (); ++it)
     {
       Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (it->first);
-      // Apenas fluxos TCP indo para o sink
+    
       if (t.sourceAddress == i_s_r1.GetAddress(0) && t.destinationAddress == destIp)
         {
-          // Duração da atividade do fluxo 
+     
           double flowDuration = 19.0;
-          //if (flowDuration == 0) flowDuration = duration; // Evitar divisão por zero se não houver pacotes
+          
 
-          // Goodput = (Total de bytes recebidos / tempo) * 8 bits/byte 
+          
           double goodput_bps = (it->second.rxBytes * 8.0) / flowDuration;
           totalGoodput += goodput_bps;
 
